@@ -1,0 +1,21 @@
+
+draw circuit
+display bool answers
+display mc answers
+complete truth table
+check answers
+award points
+advance stages:
+	one gate
+	two gates
+	one not
+	two nots
+	three nots
+	nand
+	nor
+	xor
+	xnor
+save scores to db
+display stats / leaderboard
+	
+

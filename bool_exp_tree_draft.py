@@ -1,12 +1,13 @@
 from random import randint, choice, randrange, shuffle
 
 class Node:
-    def __init__(self, label):
+    def __init__(self, label, negated):
 
         self.text = label
         self.left = None
         self.right = None
-
+        self.negated = negated
+        
     def __repr__(self):
 
         return self.text
@@ -14,15 +15,14 @@ class Node:
     def __len__(self):
         return len(self.text)
 
-    def add_child(self, child, branch):
+    def add_child(self, child, branch, negated):
         
-        if branch == 1 and self.text == "NOT":
-            raise ValueError(f"Can't add right child to node {self.text}")
+
         
-        elif self.text in TERMS:
+        if self.text in TERMS:
             raise ValueError(f"Can't add child to node {self.text}")
 
-        child = Node(child)
+        child = Node(child, negated)
         
         if branch:
             self.right = child
@@ -62,15 +62,23 @@ class BoolExpTree:
     
     def negate(self, node):
 
-        if self.nots_left:
-            if randint(0, 1):
-                self.nots_left -= 1
-                return node.add_child("NOT", 0)
+        if self.nots_left and randint(0, 1):
+            self.nots_left -= 1
+            return node.add_child("NOT", 0)
         else:
             return node
+
+    def decide_negation(self):
+        negated = False
+        if randint(0, 1) and self.nots_left > 0:
+            self.nots_left -= 1
+            negated = True
+        return negated
         
-    def generate(self):        
-        self.root = Node(choice(self.gates))
+        
+    def generate(self):
+            
+        self.root = Node(choice(self.gates), self.decide_negation())
         self.new_branch(self.root)
         input("Generated")
         
@@ -86,6 +94,11 @@ class BoolExpTree:
         branch_order = [0, 1]
         shuffle(branch_order)
 
+
+
+    
+        
+
         for branch in branch_order:
             if randint(0, 1) and self.gates_left and len(self.terms) > 2:
                 new_label = choice(self.gates)
@@ -94,7 +107,7 @@ class BoolExpTree:
                 new_label = self.terms.pop(0)
                 print("Terms left are", self.terms)
                         
-            new_node = node.add_child(new_label, branch)
+            new_node = node.add_child(new_label, branch, self.decide_negation())
 
             if new_label in self.gates:
                 self.new_branch(new_node)
@@ -106,14 +119,23 @@ class BoolExpTree:
             
         if node is None:
             node = self.root
-            if node.text == "NOT":
-                print("NOT (", end="")
+
+
+        
+        if node.negated and len(node) > 1:
+            print("NOT", end=" ")
 
         if node.childless() and direction == 0 or str(node.left) in self.gates:
             print("(", end="")
 
+        
+
+
         if node.left is not None:            
             self.print(node.left, 0)
+
+        if node.negated and len(node) == 1:
+            print("NOT", end=" ")
 
         print(" " + node.text, end=" ")
 
@@ -158,7 +180,7 @@ def create_expression(stage, level):
 
     TEST = False
 
-    tree = BoolExpTree(t, g, level, nots, TEST)
+    tree = BoolExpTree(t, g, level, 1, TEST)
 
     if TEST:
 
